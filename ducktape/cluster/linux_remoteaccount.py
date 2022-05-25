@@ -32,9 +32,10 @@ class LinuxRemoteAccount(RemoteAccount):
 
     def fetch_externally_routable_ip(self, is_aws):
         if is_aws:
-            cmd = "/sbin/ifconfig eth0 "
+            cmd = "TOKEN=$(curl -s -X PUT 'http://169.254.169.254/latest/api/token' -H 'X-aws-ec2-metadata-token-ttl-seconds: 21600') && curl -s -H 'X-aws-ec2-metadata-token: '$TOKEN 'http://169.254.169.254/latest/meta-data/local-ipv4'"
+            output = "".join(self.ssh_capture(cmd))
         else:
             cmd = "/sbin/ifconfig eth1 "
-        cmd += r"| grep 'inet ' | tail -n 1 | egrep -o '[0-9\.]+' | head -n 1 2>&1"
-        output = "".join(self.ssh_capture(cmd))
+            cmd += r"| grep 'inet ' | tail -n 1 | egrep -o '[0-9\.]+' | head -n 1 2>&1"
+            output = "".join(self.ssh_capture(cmd))
         return output.strip()
